@@ -1,0 +1,1 @@
+{"name": "AI 日报黄页", "timezone": "Asia/Shanghai", "spec": "personal-ai-daily v1.4.5", "freshness_days": 14, "down_after_failed_checks": 3, "probe_url": "https://www.github.com/"}

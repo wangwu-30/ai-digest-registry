@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:personal-ai-daily:schema:curator-entry:v1",
+  "title": "Registry entry curators/<name>.json (SKILL.md §5.1)",
+  "description": "One JSON file per member digest in a registry repo. Cross-field rules checked by registry CI, not by this schema: name equals the file name; author_id is the GitHub numeric user id of the admission PR's opener and later PRs must come from that id; canonical(url) equals canonical(curator.url) of the digest's latest.json and canonical(BASE), and is unique in the registry; opml only when the digest's index.json has sources_opml; author_id, joined_at and delist_history are written only by the registry; delist_history intervals are never removed and only the last may have to = null.",
+  "type": "object",
+  "required": ["name", "url", "author"],
+  "properties": {
+    "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,38}$", "maxLength": 39, "description": "equals the file name without .json; unique, never reused"},
+    "url": {"type": "string", "format": "uri", "pattern": "^https://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$", "maxLength": 2048, "description": "the digest BASE; canonical(url) == canonical(latest.json curator.url) == canonical(BASE)"},
+    "author": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$", "maxLength": 39, "description": "GitHub login, display only; identity is author_id"},
+    "author_id": {"type": "integer", "minimum": 1, "maximum": 9007199254740991, "description": "GitHub numeric user id of the admission PR opener; written by the registry at merge, immutable"},
+    "people": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 64}, "description": "public handles the curator trusts"},
+    "opml": {"type": "string", "format": "uri", "pattern": "^https://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$", "maxLength": 2048, "description": "only when the digest set site.publish_sources: true"},
+    "joined_at": {"$ref": "#/$defs/utc", "description": "written by the registry at merge"},
+    "delist_history": {
+      "type": "array", "maxItems": 500,
+      "description": "written by the registry, oldest first; delisted iff the last interval has to = null; restore closes the open interval, never deletes",
+      "items": {
+        "type": "object", "required": ["from", "to", "reason"], "additionalProperties": false,
+        "properties": {
+          "from": {"$ref": "#/$defs/utc"},
+          "to": {"anyOf": [{"$ref": "#/$defs/utc"}, {"type": "null"}]},
+          "reason": {"type": "string", "enum": ["down", "stale"], "maxLength": 8}
+        }
+      }
+    },
+    "restore": {"const": true, "description": "set by the author only in a restore PR; removed by the registry at merge"}
+  },
+  "patternProperties": {
+    "^x-[a-z0-9][a-z0-9-]{0,62}$": {"type": ["string", "number", "boolean", "null"], "maxLength": 200}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "utc": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", "maxLength": 20}
+  }
+}

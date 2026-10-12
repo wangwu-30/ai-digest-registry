@@ -1,0 +1,27 @@
+name: 合并后写入登记字段
+on:
+  pull_request_target:
+    types: [closed]
+permissions:
+  contents: write
+jobs:
+  stamp:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main, fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - env:
+          AID: ${{ github.event.pull_request.user.id }}
+          AT: ${{ github.event.pull_request.merged_at }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          for f in $(git diff --name-only --diff-filter=AM "$SHA^1" "$SHA" -- 'curators/*.json'); do
+            python scripts/merge_entry.py "$(basename "$f" .json)" "$AID" "$(date -u -d "$AT" +%Y-%m-%dT%H:%M:%SZ)"
+          done
+          git config user.name "registry-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add curators; git diff --cached --quiet || (git commit -m "登记 author_id / joined_at" && git push)

@@ -1,0 +1,5 @@
+jsonschema>=4.21
+rfc3339-validator
+rfc3987
+idna>=3.6
+pytest

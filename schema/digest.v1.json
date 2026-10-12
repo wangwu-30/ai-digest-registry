@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.wangwu.ai/daily/schema/digest.v1.json",
+  "title": "Personal AI Daily — public issue (digest.v1)",
+  "description": "One issue of a personal AI digest. Stable contract for agents and for other digests that consume this one as a source (registry). Unknown fields must be ignored by consumers.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generator",
+    "curator",
+    "topics",
+    "language",
+    "generated_at",
+    "date",
+    "url",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$"
+    },
+    "$schema": {
+      "type": "string"
+    },
+    "generator": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "curator": {
+      "type": "object",
+      "required": [
+        "name",
+        "url"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://"
+        }
+      }
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "language": {
+      "type": "string",
+      "description": "BCP-47, e.g. zh-CN, en"
+    },
+    "generated_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?([+-]\\d{2}:\\d{2}|Z)$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "issue date in the curator's timezone"
+    },
+    "title": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https?://",
+      "description": "this issue's HTML page"
+    },
+    "fetched": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "items"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "intro": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "trends": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "summary"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "id",
+        "canonical_url",
+        "title",
+        "summary",
+        "why",
+        "tags",
+        "section",
+        "published_at",
+        "first_seen_at",
+        "sources",
+        "signals",
+        "via"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "sha256(normalized canonical_url)[:16]; when one URL carries several entries (e.g. a changelog page) sha256(normalized canonical_url + '#' + entry title)[:16]; sha256('title:'+title)[:16] when there is no URL"
+        },
+        "canonical_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the ORIGINAL source (vendor post, repo, paper, tweet) — never a digest page"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "deprecated alias of canonical_url"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string",
+          "description": "curator's own words, <= ~120 CJK chars / ~280 Latin chars; never copied article text"
+        },
+        "why": {
+          "type": "string",
+          "description": "curator's own commentary"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "section": {
+          "type": "string"
+        },
+        "published_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "YYYY-MM-DD or ISO datetime, origin publish time if known"
+        },
+        "first_seen_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "first issue date this curator published the item/event"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "signals": {
+          "type": "object",
+          "properties": {
+            "source_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "stars_delta": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "stars_delta_period": {
+              "enum": [
+                "day",
+                "week"
+              ]
+            },
+            "stars_total": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "likes": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "upvotes": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "stars_delta_week": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        },
+        "via": {
+          "type": "array",
+          "description": "curator chain, nearest first; empty when this curator found it directly. Consumers append the upstream curator and drop items whose chain already contains themselves (echo-loop guard).",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "url"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "item_url": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "follow": {
+          "type": "boolean",
+          "description": "true = follow-up of an earlier item; summary holds only the delta"
+        },
+        "key": {
+          "type": "string",
+          "description": "curator-local event key"
+        }
+      }
+    }
+  }
+}

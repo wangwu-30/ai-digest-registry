@@ -1,0 +1,23 @@
+name: 准入检查
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: schema 与反例测试
+        run: pytest -q tests
+      - name: G1–G3 准入（只看本 PR 改动的条目）
+        if: github.event_name == 'pull_request'
+        env:
+          PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
+        run: python scripts/admit.py origin/${{ github.base_ref }} | tee -a "$GITHUB_STEP_SUMMARY"

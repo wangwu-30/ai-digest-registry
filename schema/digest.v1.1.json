@@ -1,0 +1,848 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:personal-ai-daily:schema:digest:v1.1",
+  "title": "Personal AI Daily — public issue (digest.v1.1)",
+  "description": "One issue of a personal AI digest (schema_version 1.x; this file validates 1.1). Validate with JSON Schema 2020-12 and format assertion ON. Every object accepts only its declared fields plus x-* extensions; x-* values are scalars (strings <= 200 chars). Checks a schema cannot express (id recomputation, section consistency, weighted caps, url==canonical_url, follow vs dates) are in ACCEPTANCE.md.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generator",
+    "curator",
+    "topics",
+    "language",
+    "generated_at",
+    "date",
+    "url",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$",
+      "description": "1.1 for this schema; registries pick the schema file by this value",
+      "maxLength": 16
+    },
+    "$schema": {
+      "type": "string",
+      "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+      "maxLength": 200,
+      "description": "http(s) URL of this schema (see SKILL §4.3 table)"
+    },
+    "generator": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+          "maxLength": 2048
+        }
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "name",
+              "version",
+              "url"
+            ]
+          },
+          {
+            "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+          }
+        ]
+      },
+      "patternProperties": {
+        "^x-": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "curator": {
+      "type": "object",
+      "required": [
+        "name",
+        "url"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+          "maxLength": 2048
+        }
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "name",
+              "url"
+            ]
+          },
+          {
+            "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+          }
+        ]
+      },
+      "patternProperties": {
+        "^x-": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "topics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "maxLength": 40
+      }
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z]{4})?(-([A-Z]{2}|\\d{3}))?$",
+      "maxLength": 35
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?([+-]([01]\\d|2[0-3]):[0-5]\\d|Z)$",
+      "maxLength": 40
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "maxLength": 10
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+      "maxLength": 2048
+    },
+    "fetched": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    },
+    "fetch_window": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?([+-]([01]\\d|2[0-3]):[0-5]\\d|Z)$",
+          "maxLength": 40
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?([+-]([01]\\d|2[0-3]):[0-5]\\d|Z)$",
+          "maxLength": 40
+        }
+      },
+      "description": "machine-readable collection window (replaces free-text `fetched`)",
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "start",
+              "end"
+            ]
+          },
+          {
+            "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+          }
+        ]
+      },
+      "patternProperties": {
+        "^x-": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?([+-]([01]\\d|2[0-3]):[0-5]\\d|Z)$",
+      "description": "when this version (same generated_at) first went live, e.g. the deploy commit time; absent while the version is still being deployed. A7: 0 <= published_at - generated_at <= 120 min, and date == local date of published_at",
+      "maxLength": 40
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "items"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+          "maxLength": 32
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "intro": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "curator prose; weighted length <= 200 (C5)"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "curator prose; weighted length <= 200 (C5)"
+        },
+        "trends": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "summary"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280,
+                "description": "weighted length <= 120 (C5), same rule as item summary"
+              }
+            },
+            "propertyNames": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "title",
+                    "summary"
+                  ]
+                },
+                {
+                  "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+                }
+              ]
+            },
+            "patternProperties": {
+              "^x-": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ],
+                "maxLength": 200
+              }
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 60,
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        }
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "id",
+              "title",
+              "intro",
+              "note",
+              "trends",
+              "items"
+            ]
+          },
+          {
+            "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+          }
+        ]
+      },
+      "patternProperties": {
+        "^x-": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "content"
+            ]
+          },
+          {
+            "required": [
+              "body"
+            ]
+          },
+          {
+            "required": [
+              "text"
+            ]
+          },
+          {
+            "required": [
+              "full_text"
+            ]
+          },
+          {
+            "required": [
+              "html"
+            ]
+          },
+          {
+            "required": [
+              "content_html"
+            ]
+          },
+          {
+            "required": [
+              "article"
+            ]
+          }
+        ]
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "id",
+        "canonical_url",
+        "title",
+        "summary",
+        "why",
+        "tags",
+        "section",
+        "published_at",
+        "first_seen_at",
+        "sources",
+        "signals",
+        "via"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "sha256(canonical(canonical_url) [+ '#' + entry])[:16] hex — canonical() and entry rules in SKILL.md §4.4; entry is a source-side anchor (release tag, source heading slug, YYYY-MM-DD[-n]), never curator-written text",
+          "maxLength": 16
+        },
+        "canonical_url": {
+          "type": "string",
+          "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+          "maxLength": 2048,
+          "description": "the ORIGINAL source (vendor post, repo, paper, post) — never a digest page; required, http(s)"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+          "description": "deprecated alias; must equal canonical_url; removed in v2",
+          "maxLength": 2048
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 280,
+          "description": "curator's own words; weighted length (CJK=1, other=120/280) <= 120 checked by CI; never article text or a translation of a whole post"
+        },
+        "why": {
+          "type": "string",
+          "maxLength": 280,
+          "description": "curator's own commentary; non-empty, weighted length <= 120 and jaccard(why, summary) < 0.5 (C5/C6)"
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          }
+        },
+        "section": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+          "maxLength": 32
+        },
+        "published_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+            },
+            {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d(\\.\\d+)?)?([+-]([01]\\d|2[0-3]):[0-5]\\d|Z)$"
+            }
+          ],
+          "maxLength": 40
+        },
+        "first_seen_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+            }
+          ],
+          "maxLength": 10
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+                "maxLength": 2048
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 200
+              }
+            },
+            "propertyNames": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "url",
+                    "title"
+                  ]
+                },
+                {
+                  "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+                }
+              ]
+            },
+            "patternProperties": {
+              "^x-": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ],
+                "maxLength": 200
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "signals": {
+          "type": "object",
+          "properties": {
+            "source_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "stars_delta": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "stars_delta_period": {
+              "enum": [
+                "day",
+                "week"
+              ]
+            },
+            "stars_total": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "likes": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "upvotes": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "stars_delta_week": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "source_count"
+          ],
+          "propertyNames": {
+            "anyOf": [
+              {
+                "enum": [
+                  "source_count",
+                  "stars_delta",
+                  "stars_delta_period",
+                  "stars_total",
+                  "likes",
+                  "upvotes",
+                  "stars_delta_week"
+                ]
+              },
+              {
+                "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+              }
+            ]
+          },
+          "patternProperties": {
+            "^x-": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ],
+              "maxLength": 200
+            }
+          }
+        },
+        "via": {
+          "type": "array",
+          "description": "curator chain, nearest first; empty when this curator found it directly. Consumers append the upstream curator and drop items whose chain already contains themselves (echo-loop guard).",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "url"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+                "maxLength": 2048
+              },
+              "item_url": {
+                "type": "string",
+                "pattern": "^https?://[^\\s/?#]+\\.[^\\s/?#]+(/[^\\s]*)?$",
+                "maxLength": 2048
+              }
+            },
+            "propertyNames": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "name",
+                    "url",
+                    "item_url"
+                  ]
+                },
+                {
+                  "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+                }
+              ]
+            },
+            "patternProperties": {
+              "^x-": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ],
+                "maxLength": 200
+              }
+            }
+          },
+          "maxItems": 2
+        },
+        "follow": {
+          "type": "boolean",
+          "default": false
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,127}$",
+          "maxLength": 128,
+          "description": "stable event key from the publications ledger (letters, digits, . _ : / @ + -)"
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "followed product name (cl section)"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "short display attribution, e.g. 'Publisher · MM-DD'"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,64}$",
+          "description": "present iff id used '#entry' (SKILL §4.4): id == sha256(canonical(canonical_url) + '#' + entry)[:16]",
+          "maxLength": 64
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "content"
+            ]
+          },
+          {
+            "required": [
+              "body"
+            ]
+          },
+          {
+            "required": [
+              "text"
+            ]
+          },
+          {
+            "required": [
+              "full_text"
+            ]
+          },
+          {
+            "required": [
+              "html"
+            ]
+          },
+          {
+            "required": [
+              "content_html"
+            ]
+          },
+          {
+            "required": [
+              "article"
+            ]
+          }
+        ]
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "id",
+              "canonical_url",
+              "url",
+              "title",
+              "summary",
+              "why",
+              "tags",
+              "section",
+              "published_at",
+              "first_seen_at",
+              "sources",
+              "signals",
+              "via",
+              "follow",
+              "key",
+              "product",
+              "source",
+              "entry"
+            ]
+          },
+          {
+            "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+          }
+        ]
+      },
+      "patternProperties": {
+        "^x-": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "anyOf": [
+      {
+        "enum": [
+          "schema_version",
+          "$schema",
+          "generator",
+          "curator",
+          "topics",
+          "language",
+          "generated_at",
+          "date",
+          "title",
+          "url",
+          "fetched",
+          "sections",
+          "fetch_window",
+          "published_at"
+        ]
+      },
+      {
+        "pattern": "^x-[a-z0-9][a-z0-9_-]{0,39}$"
+      }
+    ]
+  },
+  "patternProperties": {
+    "^x-": {
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ],
+      "maxLength": 200
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "content"
+        ]
+      },
+      {
+        "required": [
+          "body"
+        ]
+      },
+      {
+        "required": [
+          "text"
+        ]
+      },
+      {
+        "required": [
+          "full_text"
+        ]
+      },
+      {
+        "required": [
+          "html"
+        ]
+      },
+      {
+        "required": [
+          "content_html"
+        ]
+      },
+      {
+        "required": [
+          "article"
+        ]
+      }
+    ]
+  }
+}
