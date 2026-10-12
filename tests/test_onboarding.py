@@ -9,3 +9,5 @@ def test_missing_and_escape():
     assert B.onboarding("## 中文\n无引用") is None
     assert "<script>" not in B.onboard_html({"setup": "<script>", "join": "", "three": []})
     assert "daily-skill" in B.onboard_html(None)
+    h = B.onboard_html({"setup": "a", "join": "b", "three": ["x"]})
+    assert "做一份你自己的 AI 日报" in h and "复制给 agent" in h and h.index(">a\nb<") > 0
