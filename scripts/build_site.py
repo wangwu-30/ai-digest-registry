@@ -32,14 +32,15 @@ def fetch_onboarding():
         return None
 
 def onboard_html(ob):
-    links = f"<a href='{SKILL}'>daily-skill</a> · <a href='{JOIN}'>加入说明</a>"
+    """头部一行内的小入口：按钮直接复制，全文收进 <details> 默认不显示。"""
     if not ob:
-        return f"<section class='ob'><p class='ob-h'>用你的 agent 搭一份 AI 日报并加入黄页：{links}</p></section>"
+        return f"<a class='join' href='{SKILL}'>加入黄页</a>"
     prompt = ob["setup"] + ("\n" + ob["join"] if ob["join"] else "")
     three = "、".join(ob["three"])
-    return (f"<section class='ob'><div class='ob-h'><b>加入黄页</b><span>把下面这段发给你的 agent"
-            + (f"，你只需回答三件事：{E(three)}" if three else "") + f"。其余（装 skill、部署、提 PR 入册）它来做 · {links}</span></div>"
-            f"<div class='ob-p'><pre id='prompt'>{E(prompt)}</pre><button id='cp' type='button'>复制</button></div></section>")
+    return (f"<div class='join'><button id='cp' type='button' title='复制提示词，发给你的 agent'>加入黄页</button>"
+            f"<details><summary>查看</summary><div class='pop'>"
+            f"<p>把这段发给你的 agent" + (f"，你只需回答：{E(three)}" if three else "") + "。装 skill、部署、提 PR 入册都由它完成。</p>"
+            f"<pre id='prompt'>{E(prompt)}</pre><p><a href='{SKILL}'>daily-skill</a> · <a href='{JOIN}'>加入说明</a></p></div></details></div>")
 
 STATUS = {"ok": "正常", "fail": "检查未通过", "off": "已下架"}
 
@@ -80,7 +81,8 @@ a{color:inherit;text-decoration:none}a:hover{color:var(--ac)}
 .wrap{max-width:1200px;margin:0 auto;padding:20px 16px 40px}
 header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:12px}
 h1{font-size:18px;margin:0;letter-spacing:-.01em}.sub{color:var(--mu);font-size:12.5px}.sub a{color:var(--ac)}
-.stats{display:flex;gap:14px;font-size:12px;color:var(--mu);margin-left:auto}.stats b{color:var(--fg);font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:14px;font-size:12px;color:var(--mu);margin-left:auto;align-self:center}
+header{align-items:center}.stats b{color:var(--fg);font-variant-numeric:tabular-nums}
 .bar{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;border-bottom:1px solid var(--bd)}
 .bar input,.bar select{font:inherit;color:inherit;background:var(--hv);border:1px solid var(--bd);border-radius:6px;padding:5px 9px}
 .bar input{flex:1;min-width:180px}.bar input:focus{outline:2px solid var(--ac);outline-offset:-1px}
@@ -97,16 +99,19 @@ td{padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:middle}tr:ho
 .au,.lg,.lk{color:var(--mu);white-space:nowrap}.tp{display:flex;flex-wrap:wrap;gap:3px}td.tp{display:table-cell}.tp .tag{margin:1px}
 .dt{white-space:nowrap;font-variant-numeric:tabular-nums}.ago{display:block;font-size:11.5px;color:var(--mu)}
 .lk a{color:var(--ac)}#empty{display:none;color:var(--mu);padding:24px 8px}
-.ob{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin:0 0 6px;background:var(--hv)}
-.ob-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:12.5px;color:var(--mu);margin:0 0 6px}.ob-h b{color:var(--fg);font-size:13px}.ob-h a{color:var(--ac)}
-.ob-p{display:flex;gap:8px;align-items:stretch}.ob pre{flex:1;margin:0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;max-height:7.5em;overflow:auto}
-#cp{font:inherit;font-size:12px;border:0;border-radius:6px;padding:0 14px;background:var(--fg);color:var(--bg);cursor:pointer;white-space:nowrap}
+.join{position:relative;display:flex;align-items:center;border:1px solid var(--bd);border-radius:999px;font-size:12px;line-height:24px}
+.join>button,.join>a{font:inherit;font-weight:500;border:0;background:none;color:var(--ac);padding:0 10px;cursor:pointer;border-radius:999px 0 0 999px}
+.join>button:hover{background:var(--hv)}.join>button.done{color:var(--ok)}
+.join summary{list-style:none;cursor:pointer;color:var(--mu);padding:0 10px 0 8px;border-left:1px solid var(--bd)}.join summary::-webkit-details-marker{display:none}
+.join summary:hover,.join details[open] summary{color:var(--fg)}
+.pop{position:absolute;right:0;top:30px;z-index:5;width:min(440px,calc(100vw - 32px));background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.12);line-height:1.5;color:var(--mu)}
+.pop p{margin:0}.pop a{color:var(--ac)}.pop pre{margin:8px 0;font:12px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;color:var(--fg);background:var(--hv);border-radius:6px;padding:8px}
 footer{margin-top:18px;font-size:12px;color:var(--mu)}footer a{color:var(--ac)}
 @media(max-width:720px){thead{display:none}table,tbody,tr,td{display:block}
  tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 2px;border-bottom:1px solid var(--bd)}
  td{border:0;padding:0}td.nm{grid-column:1}td.dt{grid-column:2;grid-row:1;text-align:right}
  td.au,td.lg,td.st{display:none}td.tp{grid-column:1/-1}td.lk{grid-column:1/-1;font-size:12px}
- .stats{margin-left:0;width:100%}.ob-p{flex-direction:column}#cp{padding:7px}.ob pre{max-height:none}.bar select{flex:1}th{top:0}}
+ .stats{margin-left:0;flex:1}.bar input{flex-basis:100%}.bar select{flex:1}th{top:0}}
 """
 
 JS = """
@@ -121,7 +126,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('.tag');if(b){tag
  const h=e.target.closest('th[data-k]');if(h){asc=sk==h.dataset.k?!asc:h.dataset.k!='d';sk=h.dataset.k;sort()}});
 ['#q','#fs','#fl'].forEach(i=>$(i).addEventListener('input',apply));
 document.addEventListener('keydown',e=>{if(e.key=='/'&&document.activeElement!=$('#q')){e.preventDefault();$('#q').focus()}});
-const cp=$('#cp');cp&&cp.addEventListener('click',async()=>{const t=$('#prompt').textContent;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}cp.textContent='已复制';setTimeout(()=>cp.textContent='复制',1500)});
+const cp=$('#cp');cp&&cp.addEventListener('click',async()=>{const t=$('#prompt').textContent;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}cp.textContent='已复制 ✓';cp.classList.add('done');setTimeout(()=>{cp.textContent='加入黄页';cp.classList.remove('done')},1600)});
 const P=new URLSearchParams(location.search);$('#q').value=P.get('q')||'';tag=P.get('tag')||'';$('#fs').value=P.get('s')||'';$('#fl').value=P.get('l')||'';sort();apply();
 """
 
@@ -136,9 +141,8 @@ def render(rows, now, ob=None):
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>AI 日报黄页</title>
 <meta name="description" content="每个人用自己的 agent 收集、重排、发布的 AI 日报目录">
 <style>{CSS}</style></head><body><div class="wrap">
-<header><h1>AI 日报黄页</h1><span class="sub">每个人用自己的 agent 收集、重排、发布的 AI 日报 · <a href="https://github.com/wangwu-30/ai-digest-registry">如何加入</a> · <a href="registry.json">registry.json</a></span>
-<div class="stats"><span>收录 <b>{len(rows)}</b></span><span>正常 <b>{cnt['ok']}</b></span><span>显示 <b id="shown">{len(rows)}</b></span></div></header>
-{onboard_html(ob)}
+<header><h1>AI 日报黄页</h1><span class="sub">每个人用自己的 agent 收集、重排、发布的 AI 日报 · <a href="registry.json">registry.json</a></span>
+<div class="stats"><span>收录 <b>{len(rows)}</b></span><span>正常 <b>{cnt['ok']}</b></span><span>显示 <b id="shown">{len(rows)}</b></span></div>{onboard_html(ob)}</header>
 <div class="bar"><input id="q" type="search" placeholder="搜索名称、作者、话题…（按 / 聚焦）" aria-label="搜索">
 <select id="fs" aria-label="状态"><option value="">全部状态</option>{''.join(f'<option value="{k}">{v}</option>' for k, v in STATUS.items())}</select>
 <select id="fl" aria-label="语言"><option value="">全部语言</option>{''.join(f'<option>{E(l)}</option>' for l in langs)}</select></div>
