@@ -3,7 +3,7 @@
 页面原则：信息密度优先——一屏扫尽量多的条目，结论（名称/状态/更新时间）先行，次要信息收起。
 纯静态 HTML + 少量原生 JS（搜索/筛选/排序），无框架，无 JS 时表格照常可读。
 """
-import html, json, re, sys, urllib.request, datetime as dt
+import argparse, html, json, re, sys, urllib.request, datetime as dt
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import registry as R
@@ -16,12 +16,14 @@ JOIN = "https://github.com/wangwu-30/ai-digest-registry#readme"
 def onboarding(md):
     """从 daily-skill README 中文段抽取接入提示词（单一真相源，页面不另写一份）。"""
     zh = md.split("## English")[0]
-    quotes = re.findall(r"^> (.+)$", zh, re.M)
+    quotes = [re.sub(r"\\([<>])", r"\1", q) for q in re.findall(r"^> (.+)$", zh, re.M)]
     three = re.search(r"### 你只需要告诉 agent 三件事\n+((?:\d\. .+\n?)+)", zh)
     items = [re.sub(r"\*\*(.+?)\*\*", r"\1", x).split("：")[0] for x in re.findall(r"^\d\. (.+)$", three.group(1), re.M)] if three else []
     if not quotes:
         return None
-    return {"setup": quotes[0], "join": next((q for q in quotes[1:] if "黄页" in q), ""), "three": items}
+    existing = next((q for q in quotes if "不要从零重建" in q), "")
+    return {"setup": quotes[0], "join": next((q for q in quotes[1:] if "黄页" in q and q != existing), ""),
+            "list_existing": existing, "three": items}
 
 def fetch_onboarding():
     try:
@@ -66,15 +68,28 @@ def enrich(e, info, get=_get):
     return x
 
 def onboard_html(ob):
-    """hero 右侧主按钮：核心是"做一份自己的日报"，收录进黄页只是末步；全文收进浮层默认不显示。"""
+    """两类接入入口共享准入规则；提示词全文收进浮层。缺失文案时仅提供来源链接。"""
     if not ob:
-        return f"<a class='btn pri' href='{SKILL}'>做一份你自己的 AI 日报</a>"
+        return (f"<div class='cta'><a class='btn pri' href='{SKILL}'>做一份你自己的 AI 日报</a>"
+                f"<a class='btn ghost' href='{JOIN}'>已有日报，直接收录</a></div>")
     prompt = ob["setup"] + ("\n" + ob["join"] if ob["join"] else "")
-    return (f"<div class='cta'><button id='cp' class='btn pri' type='button' title='复制提示词，发给你的 agent'>"
+    existing = ob.get("list_existing", "")
+    existing_cta = (f"<button class='btn ghost' type='button' data-copy='prompt-existing' title='复制提示词，替换日报网址后发给你的 agent'>"
+                    f"{ICON['copy']}<span>已有日报，直接收录</span></button>" if existing else
+                    f"<a class='btn ghost' href='{JOIN}'>已有日报，直接收录</a>")
+    existing_body = (f"<pre id='prompt-existing'>{E(existing)}</pre>"
+                     f"<button class='btn ghost' type='button' data-copy='prompt-existing'><span>复制已有日报提示词</span></button>" if existing else
+                     f"<p>提示词暂不可用，请查看 <a href='{SKILL}'>daily-skill README</a> 与 <a href='{JOIN}'>收录说明</a>。</p>")
+    return (f"<div class='cta'><button class='btn pri' type='button' data-copy='prompt-setup' title='复制提示词，发给你的 agent'>"
             f"{ICON['copy']}<span>做一份你自己的 AI 日报</span></button>"
+            f"{existing_cta}"
             f"<details class='more'><summary class='btn ghost'>查看提示词</summary><div class='pop'>"
+            f"<div class='prompt-options'><section><h2>从零做一份 AI 日报</h2>"
             f"<p class='pop-h'>复制给你的 agent，回答它三个问题：关注什么、信谁、喜欢什么风格。建仓、部署、定时发布、最后收录进黄页都由它完成。</p>"
-            f"<pre id='prompt'>{E(prompt)}</pre><p class='pop-f'><a href='{SKILL}'>daily-skill {ICON['ext']}</a><a href='{JOIN}'>收录说明 {ICON['ext']}</a></p></div></details></div>")
+            f"<pre id='prompt-setup'>{E(prompt)}</pre>"
+            f"<button class='btn ghost' type='button' data-copy='prompt-setup'><span>复制从零提示词</span></button></section>"
+            f"<section><h2>已有日报，直接收录</h2><p class='pop-h'>将 &lt;URL&gt; 换成你的日报网址，再发给 agent。两类采用同一套准入。</p>"
+            f"{existing_body}</section></div><p class='pop-f'><a href='{SKILL}'>daily-skill {ICON['ext']}</a><a href='{JOIN}'>收录说明 {ICON['ext']}</a></p></div></details></div>")
 
 def ago(date, today):
     try:
@@ -136,8 +151,9 @@ h1{margin:0;font-size:28px;line-height:1.15;letter-spacing:-.025em;font-weight:6
 .btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:9px;font:inherit;font-size:13px;font-weight:550;cursor:pointer;white-space:nowrap;transition:background .15s,transform .15s,box-shadow .15s,color .15s;border:1px solid transparent}
 .btn.pri{background:var(--fg);color:var(--bg);box-shadow:var(--sh2)}.btn.pri:hover{transform:translateY(-1px)}.btn.pri:active{transform:none}.btn.pri.done{background:var(--ok);color:#fff}
 .btn.ghost{color:var(--fg2);border-color:var(--bd2);background:var(--bg2)}.btn.ghost:hover{background:var(--hv)}
-.cta{display:flex;gap:8px;align-items:center}.more{position:relative}.more summary{list-style:none}.more summary::-webkit-details-marker{display:none}
-.pop{position:absolute;right:0;top:42px;z-index:20;width:min(460px,calc(100vw - 40px));background:var(--bg2);border:1px solid var(--bd2);border-radius:12px;padding:14px;box-shadow:var(--sh2);animation:in .14s ease-out}
+.cta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:relative;margin-left:auto}.more summary{list-style:none}.more summary::-webkit-details-marker{display:none}
+.pop{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:min(760px,calc(100vw - 40px));max-height:70vh;overflow:auto;background:var(--bg2);border:1px solid var(--bd2);border-radius:12px;padding:14px;box-shadow:var(--sh2);animation:in .14s ease-out}
+.prompt-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.prompt-options h2{margin:0 0 10px;font-size:14px}.prompt-options button{margin-top:10px}
 @keyframes in{from{opacity:0;transform:translateY(-4px)}}
 .pop-h{margin:0 0 10px;font-size:12.5px;color:var(--mu)}.pop pre{margin:0;font:12px/1.6 ui-monospace,"SF Mono",Menlo,monospace;white-space:pre-wrap;word-break:break-all;background:var(--hv);border:1px solid var(--bd);border-radius:8px;padding:10px;color:var(--fg2)}
 .pop-f{display:flex;gap:14px;margin:10px 0 0;font-size:12.5px}.pop-f a{display:inline-flex;align-items:center;gap:3px;color:var(--ac)}.pop-f svg{width:12px;height:12px}
@@ -176,7 +192,7 @@ select{font:inherit;font-size:12.5px;height:34px;padding:0 10px;border-radius:9p
 .foot{padding:20px 0 40px;font-size:12px;color:var(--mu)}.foot a{color:var(--fg2)}.foot a:hover{color:var(--ac)}
 @media(max-width:640px){.wrap{padding:0 14px}.hero{padding:22px 0 14px;align-items:flex-start}h1{font-size:22px}.lead{font-size:13.5px}
  .cta{width:100%}.cta .btn.pri{flex:1;justify-content:center}.sb{min-width:100%;order:-1}.seg{flex:1}.seg button{flex:1}
- .grid{grid-template-columns:1fr;gap:10px;padding-top:10px}.card{padding:12px}.add{min-height:90px}.pop{right:0}}
+ .grid{grid-template-columns:1fr;gap:10px;padding-top:10px}.card{padding:12px}.add{min-height:90px}.pop{right:0}.prompt-options{grid-template-columns:1fr}}
 """
 
 JS = """
@@ -192,9 +208,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('.tag');if(b){tag
  const m=document.querySelector('details.more[open]');if(m&&!m.contains(e.target))m.open=false});
 $('#q').addEventListener('input',apply);$('#fl').addEventListener('input',apply);
 document.addEventListener('keydown',e=>{if(e.key=='/'&&document.activeElement!=$('#q')){e.preventDefault();$('#q').focus()}if(e.key=='Escape'){const m=document.querySelector('details.more[open]');m&&(m.open=false)}});
-async function copy(btn){const t=$('#prompt').textContent;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}
- if(btn==cp){const s=cp.querySelector('span'),o=s.textContent;s.textContent='已复制，发给你的 agent';cp.classList.add('done');setTimeout(()=>{s.textContent=o;cp.classList.remove('done')},1800)}}
-const cp=$('#cp');cp&&cp.addEventListener('click',()=>copy(cp));const ad=$('.add');ad&&cp&&ad.addEventListener('click',()=>{copy(cp);window.scrollTo({top:0,behavior:'smooth'})});
+async function copy(btn){if(btn.disabled)return;btn.disabled=true;const t=document.getElementById(btn.dataset.copy).textContent,s=btn.querySelector('span'),o=s.textContent;let copied=false;
+ try{await navigator.clipboard.writeText(t);copied=true}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{copied=document.execCommand('copy')}catch(_){}finally{a.remove()}}
+ s.textContent=copied?'已复制，发给你的 agent':'复制失败，请展开提示词手动复制';btn.classList.toggle('done',copied);
+ setTimeout(()=>{s.textContent=o;btn.classList.remove('done');btn.disabled=false},1800)}
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>copy(b)));
 const P=new URLSearchParams(location.search);$('#q').value=P.get('q')||'';tag=P.get('tag')||'';st=P.get('s')||'';$('#fl').value=P.get('l')||'';apply();
 """
 
@@ -207,7 +225,7 @@ def render(rows, now, ob=None):
     langs = sorted({r["info"].get("language") for r in rows if r["info"].get("language")})
     cnt = {k: sum(r["st"] == k for r in rows) for k in STATUS}
     cards = "\n".join(card_html(r, today) for r in rows)
-    add = "<button class='add' type='button'><b>+</b>做一份你自己的，收录在这里</button>" if ob else ""
+    add = "<button class='add' type='button' data-copy='prompt-setup'><b>+</b><span>做一份你自己的，收录在这里</span></button>" if ob else ""
     seg = "".join(f"<button data-s='{k}'>{v}</button>" for k, v in [("", f"全部 {len(rows)}"), ("ok", f"正常 {cnt['ok']}")])
     return f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>AI 日报黄页</title>
@@ -223,7 +241,7 @@ def render(rows, now, ob=None):
 <footer class="foot"><a href="registry.json">registry.json</a> · <a href="{JOIN}">收录规则</a> · 信息从各站点实时读取，生成于 {now.strftime("%Y-%m-%d %H:%M UTC")} · 每天复检，连续失效或 14 天未更新自动下架</footer></main>
 <script>{JS}</script></body></html>"""
 
-def main(out="_site"):
+def main(out="_site", skill_readme=None):
     out = R.ROOT / out; out.mkdir(exist_ok=True)
     rows = []
     for name, e in R.all_entries().items():
@@ -231,11 +249,16 @@ def main(out="_site"):
         st = "off" if R.is_delisted(e) else ("ok" if not (g2 or g3) else "fail")
         rows.append({"name": name, "e": e, "info": info, "st": st, "x": enrich(e, info)})
     now = dt.datetime.now(dt.timezone.utc)
-    (out / "index.html").write_text(render(rows, now, fetch_onboarding()))
+    ob = onboarding(Path(skill_readme).read_text(encoding="utf-8")) if skill_readme else fetch_onboarding()
+    (out / "index.html").write_text(render(rows, now, ob))
     (out / "registry.json").write_text(json.dumps(
         [{"name": r["name"], "url": r["e"]["url"], "author": r["e"]["author"], "delisted": R.is_delisted(r["e"]),
           **{k: r["info"].get(k) for k in ("title", "topics", "language", "latest")}} for r in rows], ensure_ascii=False, indent=2))
     print(f"生成 {len(rows)} 个条目 → {out}")
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("out", nargs="?", default="_site")
+    parser.add_argument("--skill-readme", help="本地 daily-skill README 路径（默认从 main 拉取）")
+    args = parser.parse_args()
+    main(args.out, args.skill_readme)
