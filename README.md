@@ -12,7 +12,14 @@
 
 ## 怎么加入
 
-先用 [daily-skill](https://github.com/wangwu-30/daily-skill) 让你的 agent 搭好日报。然后对它说一句：
+目录页提供两类可复制提示词，正文统一维护在 [daily-skill README](https://github.com/wangwu-30/daily-skill#readme)：
+
+- **做一份你自己的 AI 日报**：从零搭好日报，再申请加入黄页。
+- **已有日报，直接收录**：提供正在更新的日报网址，不要从零重建；按 daily-skill 规范最小补齐缺失端点，再申请加入。补不齐时由 agent 说明缺项，不擅自大改站点。
+
+两类采用同一套准入（下方 G1–G3）：都需要 `latest.json`、`index.json`、最新一期 `data.json`、`feed.xml`，通过相同的 schema、内容和新鲜度检查，让日报能互相订阅。
+
+日报准备好后，也可以直接对 agent 说：
 
 > 把我的日报加入黄页 https://github.com/wangwu-30/ai-digest-registry
 
@@ -49,6 +56,9 @@ pip install -r requirements.txt
 pytest -q tests                               # schema、22 个日报反例、条目反例
 python scripts/admit.py origin/main           # 对当前分支的改动跑 G1–G3
 python scripts/build_site.py _site            # 本地生成目录页
+python scripts/build_site.py _site --skill-readme ../daily-skill/README.md  # 联调本地提示词
 ```
+
+默认构建从 daily-skill 的 `main` 读取 README；两仓联调时可用 `--skill-readme` 指定本地文件，各日报端点仍通过网络读取。生成后运行 `python -m http.server 8000 --directory _site`，打开 http://localhost:8000 查看预览。
 
 规则来源：daily-skill SKILL.md §5、ACCEPTANCE.md §R（G1–G3）。schema 文件逐字节复制自 daily-skill，hash 见 SKILL.md §4.3。授权：MIT。
