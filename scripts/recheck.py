@@ -34,7 +34,7 @@ def main():
         for r in reversed(prev):
             if r["g2"]: break
             streak += 1
-        down = (not g2) and streak + 1 >= cfg["down_after_failed_checks"]
+        down = bool(g2) and streak + 1 >= cfg["down_after_failed_checks"]
         rec = {"name": name, "at": ts, "g2": not g2, "g3": not g3}
         log.append(rec)
         reason = "down" if down else ("stale" if g3 else None)
